@@ -18,16 +18,18 @@ class Splider_douban():
         raw25 = soup.find("table", attrs={"class": "olt"}).select("a")
         return raw25
 
-    def get_enough_data(self, page_num=100):
+    def get_enough_data(self, page_num=100, page_begin=0):
         """
         循环调用_get_html_by_url，制造足够数据集
+        page_begin int:
+            可选
         :return:
         """
         print("1. get_enough_data ing")
         lt = []
-        for i in range(page_num + 1):
+        for i in range(page_begin, page_begin + page_num + 1):
             lt.extend(self._get_html_by_url(i * self.offset))
-            print("进度： %d / %d" % (i, page_num))
+            print("进度： %d / %d" % (i - page_begin, page_num))
         self.enough_data = lt
         print("\n")
         return lt
@@ -68,9 +70,10 @@ class Splider_douban():
 
 if __name__ == "__main__":
     spider = Splider_douban()
-    raw_data = spider.get_enough_data(page_num=100)
+    raw_data = spider.get_enough_data(page_num=10, page_begin=100)
+    # raw_data = spider.get_enough_data(page_num=100)
+
     data_processed = spider.get_url_title(raw_data)
-    # print(data_processed)
 
     res = spider.get_data_by_loc(data_processed, loc="五道口")
     spider.save2file(res)
