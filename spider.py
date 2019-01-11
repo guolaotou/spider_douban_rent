@@ -55,6 +55,7 @@ class Splider_douban():
             lt.extend(self._get_html_by_url(i * self.offset))
             # lt.extend(self._get_html_by_url_selenium(i * self.offset))
             print("进度： %d / %d" % (i - page_begin, page_num))
+            time.sleep(0.5)
         self.enough_data = lt
         print("\n")
         return lt
