@@ -1,10 +1,13 @@
 import requests
 from bs4 import BeautifulSoup
 import json
+from selenium import webdriver
+import time
+from selenium.webdriver.chrome.options import Options
 
 class Splider_douban():
-    def __init__(self):
-        self.url = "https://www.douban.com/group/279962/discussion?start="  # 后面加offset
+    def __init__(self, url="https://www.douban.com/group/279962/discussion?start="):
+        self.url = url
         self.offset = 25
         self.enough_data = None
 
@@ -13,8 +16,29 @@ class Splider_douban():
         通过指定url得到25条原始数据
         :return:
         """
-        htmlData = requests.get(self.url+str(offset)).text
+        header = {"user-agent": "Mozilla/5.0"}
+        htmlData = requests.get(self.url+str(offset), headers=header).text
         soup = BeautifulSoup(htmlData, "lxml")
+        raw25 = soup.find("table", attrs={"class": "olt"}).select("a")
+        return raw25
+
+    def _get_html_by_url_selenium(self, offset):
+        """
+        同 _get_html_by_url, 用selenium模拟浏览器
+        参考链接 https://www.cnblogs.com/sesshoumaru/p/python-selenium-webdriver.html
+        :return:
+        """
+        # 设置chrome浏览器无界面模式
+        chrome_options = Options()
+        chrome_options.add_argument('--headless')
+        browser = webdriver.Chrome(chrome_options=chrome_options)
+
+        browser.get(self.url + str(offset))
+        for i in range(1, 5):
+            browser.execute_script('window.scrollTo(0, document.body.scrollHeight)')
+            time.sleep(0.05)
+
+        soup = BeautifulSoup(browser.page_source, "lxml")
         raw25 = soup.find("table", attrs={"class": "olt"}).select("a")
         return raw25
 
@@ -25,10 +49,11 @@ class Splider_douban():
             可选
         :return:
         """
-        print("1. get_enough_data ing")
+        print("1. get_enough_data ing...")
         lt = []
         for i in range(page_begin, page_begin + page_num + 1):
             lt.extend(self._get_html_by_url(i * self.offset))
+            # lt.extend(self._get_html_by_url_selenium(i * self.offset))
             print("进度： %d / %d" % (i - page_begin, page_num))
         self.enough_data = lt
         print("\n")
@@ -70,7 +95,10 @@ class Splider_douban():
 
 if __name__ == "__main__":
     spider = Splider_douban()
-    raw_data = spider.get_enough_data(page_num=10, page_begin=100)
+    # spider = Splider_douban(url="https://www.douban.com/group/625354/discussion?start=")# 后面加offset
+    # spider = Splider_douban(url="https://www.douban.com/group/beijingzufang/discussion?start=")# 后面加offset
+
+    raw_data = spider.get_enough_data(page_num=1, page_begin=1)
     # raw_data = spider.get_enough_data(page_num=100)
 
     data_processed = spider.get_url_title(raw_data)
@@ -78,3 +106,5 @@ if __name__ == "__main__":
     res = spider.get_data_by_loc(data_processed, loc="五道口")
     spider.save2file(res)
     print(res)
+    print(json.dumps(res))
+
