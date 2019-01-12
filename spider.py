@@ -72,10 +72,10 @@ class Splider_douban():
             print("\n进度： %d / %d" % (i - page_begin, page_num))
 
             # 防止封IP
-            if (i - page_begin) == 0:
+            if (i - page_begin) == 0 or (i - page_begin) == page_num:
                 continue
             elif (i - page_begin) % 1000 == 0:
-                sleep_time = random.randrange(5, 10) * 100
+                sleep_time = random.randrange(5, 10) * 1000
                 print("1000 sleep, sleep_time:", sleep_time)
                 time.sleep(sleep_time)
             elif (i - page_begin) % 100 == 0:
@@ -103,25 +103,25 @@ class Splider_douban():
         print("\n")
         return lt
 
-    def get_url_title(self, raw_data):
+    def make_url_title(self, raw_data):
         """
         处理数据，得到url和title
         :return:
         """
-        print("2. get_url_title ing...\n")
+        print("2. make_url_title ing...\n")
         lt_url_title = []
         for _ in raw_data:
             lt_url_title.append({"url": _.get("href"), "title": _.get("title")})
         return lt_url_title
 
-    def get_data_by_loc(self, data, loc="五道口"):
+    def make_data_by_loc(self, data, loc="五道口"):
         """
         根据指定地点，筛选只具有该地点的数据
         :param data:
         :param loc:
         :return:
         """
-        print("3. get_data_by_loc ing...\n")
+        print("3. make_data_by_loc ing...\n")
         res = []
         for _ in data:
             title = _.get("title")
@@ -137,21 +137,21 @@ class Splider_douban():
         label = datetime.now().strftime("20%y%m%d_%s")
         with open("res_data%s.txt" % label, "w") as f:
             f.write(json_type)
-        print("5. end.")
 
 
 if __name__ == "__main__":
     # spider = Splider_douban()
-    # spider = Splider_douban(url="https://www.douban.com/group/625354/discussion?start=")# 后面加offset
-    spider = Splider_douban(url="https://www.douban.com/group/beijingzufang/discussion?start=")# 后面加offset
+    spider = Splider_douban(url="https://www.douban.com/group/625354/discussion?start=")# 后面加offset
+    # spider = Splider_douban(url="https://www.douban.com/group/beijingzufang/discussion?start=")# 后面加offset
 
     raw_data = spider.get_enough_data(page_num=400, page_begin=0)
     # raw_data = spider.get_enough_data(page_num=100)
 
-    data_processed = spider.get_url_title(raw_data)
+    data_processed = spider.make_url_title(raw_data)
 
-    res = spider.get_data_by_loc(data_processed, loc="五道口")
+    res = spider.make_data_by_loc(data_processed, loc="五道口")
     spider.save2file(res)
     print(res)
     print(json.dumps(res))
+    print("\n5. 总共爬取了%d条 end." % len(res))
 
