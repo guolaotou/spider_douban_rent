@@ -1,9 +1,13 @@
+# -*- coding: utf-8 -*-
 import requests
 from bs4 import BeautifulSoup
 import json
 from selenium import webdriver
 import time
 from selenium.webdriver.chrome.options import Options
+import logging
+import random
+
 
 class Splider_douban():
     def __init__(self, url="https://www.douban.com/group/279962/discussion?start="):
@@ -19,7 +23,12 @@ class Splider_douban():
         header = {"user-agent": "Mozilla/5.0"}
         htmlData = requests.get(self.url+str(offset), headers=header).text
         soup = BeautifulSoup(htmlData, "lxml")
-        raw25 = soup.find("table", attrs={"class": "olt"}).select("a")
+        try:
+            raw25 = soup.find("table", attrs={"class": "olt"}).select("a")
+        except AttributeError as e:
+            logging.error(e)
+            return "error"
+
         return raw25
 
     def _get_html_by_url_selenium(self, offset):
@@ -52,10 +61,43 @@ class Splider_douban():
         print("1. get_enough_data ing...")
         lt = []
         for i in range(page_begin, page_begin + page_num + 1):
-            lt.extend(self._get_html_by_url(i * self.offset))
+            temp = self._get_html_by_url(i * self.offset)
+            if temp is "error":
+                print("error, i - page_begin = :", i - page_begin)
+                print("\n")
+                break
+            lt.extend(temp)
             # lt.extend(self._get_html_by_url_selenium(i * self.offset))
-            print("进度： %d / %d" % (i - page_begin, page_num))
-            time.sleep(0.5)
+            print("\n进度： %d / %d" % (i - page_begin, page_num))
+
+            # 防止封IP
+            if (i - page_begin) == 0:
+                continue
+            elif (i - page_begin) % 1000 == 0:
+                sleep_time = random.randrange(5, 10) * 100
+                print("1000 sleep, sleep_time:", sleep_time)
+                time.sleep(sleep_time)
+            elif (i - page_begin) % 100 == 0:
+                sleep_time = random.randrange(5, 10) * 10
+                print("100 sleep, sleep_time:", sleep_time)
+                time.sleep(sleep_time)
+            elif (i - page_begin) % 20 == 0:
+                sleep_time = random.randrange(5, 10) * 1
+                print("20 sleep, sleep_time:", sleep_time)
+                time.sleep(sleep_time)
+            elif (i - page_begin) % 10 == 0:
+                sleep_time = random.randrange(5, 10) * 0.5
+                print("10 sleep, sleep_time:", sleep_time)
+                time.sleep(sleep_time)
+            elif (i - page_begin) % 5 == 0:
+                sleep_time = random.randrange(5, 10) * 0.2
+                print("5 sleep, sleep_time:", sleep_time)
+                time.sleep(sleep_time)
+            else:
+                sleep_time = random.randrange(5, 10) * 0.1
+                print("1 sleep, sleep_time:", sleep_time)
+                time.sleep(sleep_time)
+
         self.enough_data = lt
         print("\n")
         return lt
@@ -99,7 +141,7 @@ if __name__ == "__main__":
     # spider = Splider_douban(url="https://www.douban.com/group/625354/discussion?start=")# 后面加offset
     # spider = Splider_douban(url="https://www.douban.com/group/beijingzufang/discussion?start=")# 后面加offset
 
-    raw_data = spider.get_enough_data(page_num=1, page_begin=1)
+    raw_data = spider.get_enough_data(page_num=400, page_begin=0)
     # raw_data = spider.get_enough_data(page_num=100)
 
     data_processed = spider.get_url_title(raw_data)
