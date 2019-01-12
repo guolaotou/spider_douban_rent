@@ -7,6 +7,7 @@ import time
 from selenium.webdriver.chrome.options import Options
 import logging
 import random
+from datetime import datetime
 
 
 class Splider_douban():
@@ -131,15 +132,18 @@ class Splider_douban():
         return res
 
     def save2file(self, data):
+        print("4. saving data ing...")
         json_type = json.dumps(data)
-        with open("res_data.txt", "w") as f:
+        label = datetime.now().strftime("20%y%m%d_%s")
+        with open("res_data%s.txt" % label, "w") as f:
             f.write(json_type)
+        print("5. end.")
 
 
 if __name__ == "__main__":
-    spider = Splider_douban()
+    # spider = Splider_douban()
     # spider = Splider_douban(url="https://www.douban.com/group/625354/discussion?start=")# 后面加offset
-    # spider = Splider_douban(url="https://www.douban.com/group/beijingzufang/discussion?start=")# 后面加offset
+    spider = Splider_douban(url="https://www.douban.com/group/beijingzufang/discussion?start=")# 后面加offset
 
     raw_data = spider.get_enough_data(page_num=400, page_begin=0)
     # raw_data = spider.get_enough_data(page_num=100)
